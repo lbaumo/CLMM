@@ -6,21 +6,27 @@ from clmm.core import manager
 from clmm.core.datatypes import *
 from clmm.galaxycluster import *
 
-test_spec = {'test%d'%i:True for i in range(3)}
+# Function specifications
+function_specs = {'test_func_%d'%i:True for i in range(3)}
+
+# Data input specifications
+test_specs = {'test%d'%i:True for i in range(3)}
 test_table = []
-test_data = GCData('test_data', test_spec, test_table)
-test_data_out = GCData('func_test', test_spec, test_table)
+test_data = GCData('test_data', test_specs, test_table)
+
+test_packed_data = GCData('function_to_test', function_specs, test_table)
 
 manager_guy = manager.Manager()
 
+# Galaxy cluster example data
 test_gc = GalaxyCluster('test_cluster', test_data)
 test_gc_out = GalaxyCluster('test_cluster', test_data)
-test_gc_out.add_data(test_data_out)
+test_gc_out.add_data(test_packed_data)
 
-def func_test(data, **argv):
+def function_to_test(data, **argv):
     print('*** Here is your data ***')
     print(data)
-    print('* and aux args:')
+    print('* and auxiliary args:')
     for a, i in argv.items():
         print(a, i)
     print('*************************')
@@ -29,19 +35,19 @@ def func_test(data, **argv):
 from numpy import testing as tst
 
 def test_signcreator():
-    tst.assert_equal(manager_guy._signcreator(func_test), 'func_test')
+    tst.assert_equal(manager_guy._signcreator(function_to_test), 'function_to_test')
 
 def test_signspecs():
-    tst.assert_equal(manager_guy._signspecs(test_spec), test_spec)
+    tst.assert_equal(manager_guy._signspecs(function_specs), function_specs)
 
 def test_pack() :
-    tst.assert_equal(manager_guy._pack(func_test, test_spec, []), test_data_out)
+    tst.assert_equal(manager_guy._pack(function_to_test, function_specs, test_table), test_packed_data)
 
 def test_unpack() :
-    tst.assert_equal(manager_guy._unpack(test_gc, func_test, test_spec), test_data.values)
+    tst.assert_equal(manager_guy._unpack(test_gc, function_to_test, function_specs), test_data.values)
 
 def test_apply() :
-    manager_guy.apply(test_gc, func_test, test_spec, test_spec)
+    manager_guy.apply(test_gc, function_to_test, function_specs, test_specs)
     #tst.assert_equal(test_gc, test_gc_out)
     for d1, d2 in zip(test_gc.data, test_gc_out.data):
         print(d1, d2)
@@ -52,4 +58,12 @@ def test_prepare() :
 
 def test_deliver() :
     pass
+
+
+if __name__ == "__main__" :
+    test_signcreator()
+    test_signspecs()
+    test_pack()
+    test_unpack()
+    test_apply()
 
