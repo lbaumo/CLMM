@@ -16,7 +16,7 @@ test_data = GCData('test_data', test_specs, test_table)
 
 test_packed_data = GCData('function_to_test', function_specs, test_table)
 
-manager_guy = manager.Manager()
+manager_guy = manager.Manager({'function_to_test':test_data})
 
 # Galaxy cluster example data
 test_gc = GalaxyCluster('test_cluster', test_data)
@@ -44,6 +44,8 @@ def test_pack() :
     tst.assert_equal(manager_guy._pack(function_to_test, function_specs, test_table), test_packed_data)
 
 def test_unpack() :
+    print(manager_guy._unpack(test_gc, function_to_test, function_specs))
+    print(test_data.values)
     tst.assert_equal(manager_guy._unpack(test_gc, function_to_test, function_specs), test_data.values)
 
 def test_apply() :

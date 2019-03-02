@@ -17,10 +17,16 @@ class Manager():
         given the creator of the function
     '''
 
-    def __init__(self):
+    def __init__(self, input_creators):
         '''
+        Parameters
+        ----------
+        input_creators: dict
+             key, value pairs of the function name and the test data name
+
         '''
-        self.input_creators = {'func_test':'test_data'}
+        self.input_creators = input_creators
+        #self.input_creators = {'function_to_test':'test_data'}
 
     def apply(self, cluster, func, func_specs, input_specs):
         '''
@@ -33,9 +39,9 @@ class Manager():
         func: clmm function
             clmm function to be applied to cluster
         func_specs: dict
-            Inputs of func
+            Input key-word arguments of func 
         input_specs: dict
-            Specifications of input data (how it was created, what are the properties)
+            Specifications of input data needed by the function, including how the input data was created, what its propoerties
         '''
 
         # Below kind of prepares, self.prepare may not be necessary, depending on how we choose to define inference.
@@ -56,9 +62,9 @@ class Manager():
         Parameters
         ----------
         func: clmm function
-            clmm function to be applied to cluster
+            clmm function to be applied to cluster data
         func_specs: dict
-            Inputs of func
+            Input key-word arguments of func
         incoming_values: astropy.Table
             Data with units            
             Data to be added to cluster (e.g. assumed source redshift distribution, cluster redshift, cluster mass if calculated), this needs to be compatible as other attributes of the GCData object
@@ -69,7 +75,7 @@ class Manager():
         incoming_specs = self._signspecs(func_specs)
         return GCData(incoming_creator, incoming_specs, incoming_values)
 
-    def _unpack(self, cluster, func, func_specs):
+    def _unpack(self, cluster, func, input_specs):
         '''
         Extracts the desired data from GalaxyCluster to be used in a
         certain function.  e.g. This could be the shear map values
@@ -82,12 +88,12 @@ class Manager():
             Object input and output for function
         func: method 
             To be applied to cluster data
-        func_specs: dict
-            Inputs of func
+        input_specs: dict
+            Specifications of input data needed by the function, including how the input data was created, what its propoerties
 
         '''
         creator = self.input_creators[self._signcreator(func)]
-        specs = self._signspecs(func_specs)
+        specs = self._signspecs(input_specs)
         return cluster.find_data(creator, specs, exact=True)[0].values
 
     def _signcreator(self, func):
