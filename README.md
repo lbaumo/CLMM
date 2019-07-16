@@ -9,7 +9,7 @@ A new and improved cluster mass modeling code descended from [clmassmod](https:/
 * [Alex Malz](https://github.com/aimalz) (NYU)
 * [Camille Avestruz](https://github.com/cavestruz) (UChicago)
 * [Anja von der Linden](https://github.com/anjavdl) (Stony Brook)
-* [Matthew Kirby](https://github.com/matthewkirby)
+* [Matthew Kirby](https://github.com/matthewkirby) (Arizona)
 * [Tom McClintock](https://github.com/tmcclintock) (Arizona)
 * [Mariana Penna Lima](https://github.com/pennalima)
 * [Brandyn Lee](https://github.com/brandynlee)
