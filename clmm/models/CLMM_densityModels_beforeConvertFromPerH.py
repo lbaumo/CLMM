@@ -1,19 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 19 15:05:13 2015
-
-@author: Matthew Fong
-"""
-
-
 import colossus.cosmology.cosmology as Cosmology
 from colossus.utils import constants
 import colossus.halo.profile_dk14 as profile_dk14
-#import HaloDensityProfile
 import colossus.halo as Halo
 import colossus.halo.concentration as hc
-#import HaloConcentration as hc
-#import cosmolopy.distance as cd
 
 
 import numpy as np
@@ -21,44 +10,67 @@ from scipy import integrate
 from abc import ABCMeta
 
 
-'''
-#More flexible SigmaCrit function
-class weakLens(object):
-    def __init__(self, zd, cosmoName):
-        self.zd = zd
-        self.cosmo = Cosmology.setCosmology(cosmoName)
-        
-        cosmo = {'omega_M_0' : self.cosmo.Om0, \
-                 'omega_lambda_0' : self.cosmo.OL0, \
-                 'h' : self.cosmo.h}
-        self.cosmoDist = cd.set_omega_k_0(cosmo)
-    def beta(self, zs):
-        zd = self.zd
-        Dd = cd.angular_diameter_distance(zd, **self.cosmoDist)
-        if isinstance(zs,np.ndarray):
-            f = np.piecewise(zs, [zs<=zd, zs>zd], \
-                                [lambda zs: 0., \
-                                 lambda zs: 1.-Dd*(1.+zd)/cd.comoving_distance(zs, z0=0., **self.cosmoDist)])
-        else: 
-            if (zs<=self.zd): 
-                f = 0.
-            else:
-                f = 1.-Dd*(1.+zd)/cd.comoving_distance(zs, z0=0., **self.cosmoDist)
-        return f
-        
-    def sigmaC(self, zs):
-        zd = self.zd
-        Dd = cd.angular_diameter_distance(zd, **self.cosmoDist)
-        # some astrophysical parameters
-        Mpc2meter=3.08568025*10**22 # Mpc to meters
-        Msolar2kg=1.989*10**30 # kg
-        clight=2.99792*10**8/Mpc2meter # m/s -> Mpc/s
-        G = 6.67428*10**(-11)/(Mpc2meter**3)*Msolar2kg # m3/(kg·s^2) --> Mpc^3/(solar mass * s^2)
-        return clight**2/(4*np.pi*G*Dd*self.beta(zs))
-'''
+import numpy as np
+from clmm.models import Model
+import pyccl as ccl
+
+
+#EWTG = 0.00430172
+#LIGHT_MS = 299792458.0
+RHO_CRITICAL = ccl.physical_constants.RHO_CRITICAL
+
+class Profile(Model):
+    """ Class holding halo profiles
+
+    Class to hold halo profiles and compute DeltaSigma with them.
+    Defaults to NFW but in future, overriding possible with profiles
+    from CCL
+    """
+    
+    def __init__(self, z_lens, mass_def, cosmology, profilename, profileparams):
+        self.z_lens = zlens
+        self.mass_def = mass_def
+        self.cosmology = cosmology
+
+        if profile == "nfw":
+            self.M = profileparams['M']
+            self.c = profileparams['c']
+
+            mass_def_delta = int(self.mass_def[:-1])
+            r_from_m = (0.75*self.M/(mass_def_delta*RHO_CRITICAL*np.pi))**(1./3.)
+            self.rs = r_from_m/self.c
+            self.delta_c = (mass_def_delta*self.c**3/3.)/(np.log(1. + self.c) - self.c/(1. + self.c))
+            # self.rho_mdef = (Halo.mass_so.densityThreshold(self.zL, self.mdef) * 1E9 *(self.cosmo.h)**2.)/self.Delta
+
+        else:
+            raise ValueError("{} profile is not defined.".format(profile))
+
+    def profile3d():
+        pass
+
+    def profile2d():
+        pass
+
+    def sigma_r():
+        pass
+
+    def sigma_mean():
+        pass
+
+    def sigma_crit():
+        pass
+
+    def delta_sigma():
+        pass
+
+
+
+
+
+
 class profile(object):
     
-    __metaclass__ = ABCMeta
+    __metaclass__ = ABCMeta # What is this????
     
     def __init__(self, zL, mdef, chooseCosmology):
         self.chooseCosmology = chooseCosmology
@@ -67,40 +79,39 @@ class profile(object):
         self.G, self.v_c, self.H2, self.cosmo = self.calcConstants()
         return
     
-    '''
-    ############################################################################
-                            Constants for Profiles
-    ############################################################################
-    '''
-    
+    # '''
+    # ############################################################################
+    #                         Constants for Profiles
+    # ############################################################################
+    # '''
+    #
+    # def calcConstants(self):
+    #     chooseCosmology = self.chooseCosmology
+    #     zL = self.zL
+    #     listCosmologies = ['planck15-only', 'planck15', 'planck13-only', \
+    # 'planck13', 'WMAP9-only', 'WMAP9-ML', 'WMAP9', 'WMAP7-only', 'WMAP7-ML', \
+    # 'WMAP7', 'WMAP5-only', 'WMAP5-ML', 'WMAP5', 'WMAP3-ML', 'WMAP3', \
+    # 'WMAP1-ML', 'WMAP1', 'bolshoi', 'millennium', 'powerlaw']        
+    #     if chooseCosmology is None:
+    #         raise Exception('A name for the cosmology must be set.')
+    #     if chooseCosmology not in listCosmologies:
+    #         msg = 'Cosmology must be one of ' + str(listCosmologies)    
+    #         raise Exception(msg)
+    #     if chooseCosmology in listCosmologies:
+    #         cosmo = Cosmology.setCosmology(chooseCosmology)
+    #     # Gravitational constant [G] = Mpc * m^2 / M_{\odot}/s^2 from kpc * km^2 / M_{\odot} / s^2
+    #     #G = Cosmology.AST_G * 1E3
+    #     G = constants.G * 1E3
+    #     
+    #     # Hubble parameter H(z)^2 [H0] = m/s/Mpc #from km/s/Mpc
+    #     #[H2] = (m/s/Mpc)^2
+    #     H2 = (cosmo.Hz(zL)**2.)*1E6
+    #     # speed of light v_c [v_c] = m/s from [AST_c] = cm/s 
+    #     #v_c = Cosmology.AST_c / 1E2
+    #     v_c = constants.C/1E2
+    #     
+    #     return G, v_c, H2, cosmo
 
-    def calcConstants(self):
-        chooseCosmology = self.chooseCosmology
-        zL = self.zL
-        listCosmologies = ['planck15-only', 'planck15', 'planck13-only', \
-    'planck13', 'WMAP9-only', 'WMAP9-ML', 'WMAP9', 'WMAP7-only', 'WMAP7-ML', \
-    'WMAP7', 'WMAP5-only', 'WMAP5-ML', 'WMAP5', 'WMAP3-ML', 'WMAP3', \
-    'WMAP1-ML', 'WMAP1', 'bolshoi', 'millennium', 'powerlaw']        
-        if chooseCosmology is None:
-            raise Exception('A name for the cosmology must be set.')
-        if chooseCosmology not in listCosmologies:
-            msg = 'Cosmology must be one of ' + str(listCosmologies)    
-            raise Exception(msg)
-        if chooseCosmology in listCosmologies:
-            cosmo = Cosmology.setCosmology(chooseCosmology)
-        # Gravitational constant [G] = Mpc * m^2 / M_{\odot}/s^2 from kpc * km^2 / M_{\odot} / s^2
-        #G = Cosmology.AST_G * 1E3
-        G = constants.G * 1E3
-        
-        # Hubble parameter H(z)^2 [H0] = m/s/Mpc #from km/s/Mpc
-        #[H2] = (m/s/Mpc)^2
-        H2 = (cosmo.Hz(zL)**2.)*1E6
-        # speed of light v_c [v_c] = m/s from [AST_c] = cm/s 
-        #v_c = Cosmology.AST_c / 1E2
-        v_c = constants.C/1E2
-        
-        return G, v_c, H2, cosmo
-    
     '''
     ############################################################################
                           Critical Surface Mass Density
